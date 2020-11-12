@@ -5,7 +5,6 @@ use actix_http::error::PayloadError;
 use actix_http::http::StatusCode;
 use actix_http::ResponseError;
 use actix_web::HttpResponse;
-use futures_util::core_reexport::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub struct CborError(serde_cbor::Error);
@@ -40,8 +39,8 @@ impl From<PayloadError> for CborPayloadError {
     }
 }
 
-impl Display for CborPayloadError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for CborPayloadError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CborPayloadError::Overflow => writeln!(f, "Cbor payload size is bigger than allowed"),
             CborPayloadError::ContentType => writeln!(f, "Content type error"),
@@ -61,9 +60,7 @@ impl Error for CborPayloadError {}
 impl ResponseError for CborPayloadError {
     fn error_response(&self) -> HttpResponse {
         match *self {
-            CborPayloadError::Overflow => {
-                HttpResponse::new(StatusCode::PAYLOAD_TOO_LARGE)
-            }
+            CborPayloadError::Overflow => HttpResponse::new(StatusCode::PAYLOAD_TOO_LARGE),
             _ => HttpResponse::new(StatusCode::BAD_REQUEST),
         }
     }
