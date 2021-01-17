@@ -69,6 +69,7 @@ mod tests;
 ///     Cbor(Greeting { inner })
 /// }
 /// ```
+#[derive(Default, Clone)]
 pub struct Cbor<T>(pub T);
 
 impl<T> Cbor<T> {
