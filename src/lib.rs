@@ -1,10 +1,13 @@
 //! # Example
 //! ```
 //! use actix_cbor::Cbor;
+//! use actix_web::get;
 //!
+//! #[derive(serde::Deserialize)]
 //! struct User {
 //!     name: String,
 //! }
+//! #[derive(serde::Serialize)]
 //! struct Greeting {
 //!     inner: String,
 //! }
@@ -54,10 +57,14 @@ mod tests;
 /// # Example
 /// ```
 /// use actix_cbor::Cbor;
+/// use actix_web::get;
 ///
+/// #[derive(serde::Deserialize)]
 /// struct User {
 ///     name: String,
 /// }
+///
+/// #[derive(serde::Serialize)]
 /// struct Greeting {
 ///     inner: String,
 /// }
