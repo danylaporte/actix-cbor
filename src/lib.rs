@@ -42,10 +42,12 @@ use serde::Serialize;
 pub use body::*;
 pub use config::*;
 pub use error::*;
+pub use http_response_builder_ext::*;
 
 mod body;
 mod config;
 mod error;
+mod http_response_builder_ext;
 
 #[cfg(test)]
 mod tests;
