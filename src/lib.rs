@@ -1,10 +1,14 @@
 //! # Example
 //! ```
 //! use actix_cbor::Cbor;
+//! use actix_web::get;
 //!
+//! #[derive(serde::Deserialize)]
 //! struct User {
 //!     name: String,
 //! }
+//!
+//! #[derive(serde::Serialize)]
 //! struct Greeting {
 //!     inner: String,
 //! }
@@ -24,13 +28,14 @@ extern crate serde;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-use actix_http::http::StatusCode;
-use actix_http::{Payload, PayloadStream, Response};
 #[cfg(feature = "compress")]
 use actix_web::dev::Decompress;
-use actix_web::{FromRequest, HttpRequest, Responder};
-use futures_util::future::{err, ok, LocalBoxFuture, Ready};
+use actix_web::{
+    dev::Payload, http::StatusCode, FromRequest, HttpRequest, HttpResponse, Responder,
+};
+use futures_util::future::LocalBoxFuture;
 use futures_util::FutureExt;
+use log::error;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -54,10 +59,14 @@ mod tests;
 /// # Example
 /// ```
 /// use actix_cbor::Cbor;
+/// use actix_web::get;
 ///
+/// #[derive(serde::Deserialize)]
 /// struct User {
 ///     name: String,
 /// }
+///
+/// #[derive(serde::Serialize)]
 /// struct Greeting {
 ///     inner: String,
 /// }
@@ -106,18 +115,16 @@ impl<T> Responder for Cbor<T>
 where
     T: Serialize,
 {
-    type Error = CborError;
-    type Future = Ready<Result<Response, Self::Error>>;
-
-    fn respond_to(self, _: &HttpRequest) -> Self::Future {
-        let body = match serde_cbor::to_vec(&self.0) {
-            Ok(body) => body,
-            Err(e) => return err(e.into()),
-        };
-
-        ok(Response::build(StatusCode::OK)
-            .content_type("application/cbor")
-            .body(body))
+    fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+        match serde_cbor::to_vec(&self.0) {
+            Ok(body) => HttpResponse::build(StatusCode::OK)
+                .content_type("application/cbor")
+                .body(body),
+            Err(e) => {
+                error!("cbor serialization error: {}", e);
+                HttpResponse::InternalServerError().finish()
+            }
+        }
     }
 }
 
@@ -129,7 +136,7 @@ where
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
     type Config = CborConfig;
 
-    fn from_request(req: &HttpRequest, payload: &mut Payload<PayloadStream>) -> Self::Future {
+    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
         let req2 = req.clone();
         let config = CborConfig::from_req(req);
 
