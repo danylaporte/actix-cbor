@@ -1,6 +1,4 @@
-use actix_web::body::Body;
-use actix_web::BaseHttpResponse;
-use actix_web::{error::PayloadError, http::StatusCode, ResponseError};
+use actix_web::{body::Body, error::PayloadError, http::StatusCode, HttpResponse, ResponseError};
 use std::error::Error;
 use std::fmt;
 
@@ -56,10 +54,10 @@ impl Error for CborPayloadError {}
 
 /// Return `BadRequest` for `CborPayloadError`
 impl ResponseError for CborPayloadError {
-    fn error_response(&self) -> BaseHttpResponse<Body> {
+    fn error_response(&self) -> HttpResponse<Body> {
         match *self {
-            CborPayloadError::Overflow => BaseHttpResponse::new(StatusCode::PAYLOAD_TOO_LARGE),
-            _ => BaseHttpResponse::new(StatusCode::BAD_REQUEST),
+            CborPayloadError::Overflow => HttpResponse::new(StatusCode::PAYLOAD_TOO_LARGE),
+            _ => HttpResponse::new(StatusCode::BAD_REQUEST),
         }
     }
 }

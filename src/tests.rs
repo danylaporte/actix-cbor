@@ -2,8 +2,7 @@ use super::*;
 use actix_web::body::Body;
 use actix_web::error::InternalError;
 use actix_web::http::header::{self, ContentType, HeaderValue};
-use actix_web::test::{load_stream, TestRequest};
-use actix_web::BaseHttpResponse;
+use actix_web::test::{load_body, TestRequest};
 use actix_web::{web, HttpResponse};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -52,9 +51,8 @@ async fn test_responder() {
     );
 
     let body = resp.body();
-    let payload = body.as_ref().unwrap();
 
-    if let Body::Bytes(b) = payload {
+    if let Body::Bytes(b) = body {
         assert_eq!(&encoded, b);
 
         let decoded: MyObject = serde_cbor::from_slice(&b).unwrap();
@@ -76,10 +74,10 @@ async fn test_custom_error_responder() {
         .to_http_parts();
 
     let s = Cbor::<MyObject>::from_request(&req, &mut pl).await;
-    let mut resp = BaseHttpResponse::from_error(s.err().unwrap());
+    let resp = HttpResponse::from_error(s.err().unwrap());
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 
-    let body = load_stream(resp.take_body()).await.unwrap();
+    let body = load_body(resp.into_body()).await.unwrap();
     let msg: MyObject = serde_cbor::from_slice(&body).unwrap();
     assert_eq!(msg.name, "test");
 }
